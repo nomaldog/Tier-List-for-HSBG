@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <title>Tier List for HSBG α</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+    <!-- Vue.js -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+    <script src="https://unpkg.com/vue-ls"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.8.4/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Vue.Draggable/2.23.2/vuedraggable.umd.min.js"></script>
+  </head>
+
+  <body>
+    <div class="container" id="app">
+
+      <!-- ヒーロー毎の詳細ダイアログ(Bootstrap Modal Dialog) -->
+      <div class="modal" id="modal" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">{{get_selecthero.hero_name}}</h5>
+              <img :src="get_imgfilepath(modal_target.no)" style="height:200px;"></img>
+            </div>
+            <div class="modal-body">
+              <p>Memo</p>
+              <textarea v-model="modal_target.memo" @change="temp_save" style="width: 400px;height: 200px;"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h1>Tier List for HSBG α</h1>
+
+      <!-- JSON Import/Export 機能 -->
+      <input type="file" class="form-control m-1" @change="imp_json" v-model="import_fname"/>
+      <button type="button" class="btn btn-primary m-1" @click="exp_json">JSONダウンロード</button>
+
+      <!-- Tier表 -->
+      <table class="table table-dark">
+        <tbody>
+          <tr v-for="tier in tiers"style="min-height:120px">
+            <th scope="row" :style="tier.style">{{tier.name}}</th>
+            <td>
+              <draggable tag="ul" @end="temp_save" :options="{group:'ITEMS'}"  style="min-height:100px" v-model="tier.heros">
+                <img @click="open_modal(hero)" v-for="hero in tier.heros" :key="hero.no" :src="get_imgfilepath(hero.no)" style="height:100px;"></img>
+              </draggable>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Tier表外の未割り当てヒーロープール -->
+      <draggable tag="ul" @end="temp_save" :options="{group:'ITEMS'}"  style="min-height:120px" v-model="hero_pools">
+        <img v-for="hero in hero_pools" :key="hero.no" :src="get_imgfilepath(hero.no)" style="height:100px;"></img>
+      </draggable>
+
+    </div>
+  </body>
+</html>
+
+<script>
+  const draggable = window['vuedraggable'];
+  const Storage = window.VueStorage;
+  Vue.use(Storage);
+
+  new Vue({
+    el: "#app",
+    components: {
+      'draggable': draggable,
+    },
+    data: {
+      tiers:[],        // Tier表の中身（Tier表各行の定義と配属ヒーローリスト）
+      hero_pools:[],   // Tier表外のヒーロープール中身
+      hero_info:[],    // 静的なヒーロー情報
+      import_fname:'', // JSON Importでinputに指定されたファイル名
+      modal_target:[]  // 各ヒーローの詳細画面で開いているヒーロー情報（参照渡ししてる）
+    },
+    mounted() {
+      // 静的なヒーロー情報読み込み
+      fetch('./database.json')
+      .then(response => {
+              return response.json();
+          })
+          .then(json => {
+              this.hero_info = json.hero_info;
+          })
+
+      // 一時保存データの読み込み（データがない場合はデフォルト定義を読み込み）
+      if(Vue.ls.get('tiers') && Vue.ls.get('hero_pools')){
+        this.tiers      = JSON.parse(Vue.ls.get('tiers'));
+        this.hero_pools = JSON.parse(Vue.ls.get('hero_pools'));
+      }else{
+        fetch('./default.json')
+          .then(response => {
+              return response.json();
+          })
+          .then(json => {
+              this.tiers = json.tiers;
+              this.hero_pools = json.hero_pools;
+          })
+      }
+    },
+    computed:{
+      // 要見直し：各ヒーローの詳細画面でヒーロー名を出力する仕組み
+      get_selecthero(){
+        return this.modal_target.no ? this.hero_info.filter(hero_info => hero_info.no === this.modal_target.no)[0] : {hero_name:""};
+      }
+    },
+    methods: {
+      open_modal(hero){ // ヒーロー詳細画面を開く
+        let modal = document.getElementById('modal');
+        let modalObj = new bootstrap.Modal(modal);
+        this.modal_target = hero;
+
+        modalObj.show();
+      },
+
+      get_imgfilepath(no){ // ヒーロー画像のファイルパス取得
+        return no ? this.hero_info.filter(hero_info => hero_info.no === no)[0].filename : '';
+      },
+
+      temp_save(){// ローカルストレージへの一時保存　各項目変更するたびに実行
+        Vue.ls.set('tiers'     , JSON.stringify(this.tiers)     , 60 * 60 * 1000);
+        Vue.ls.set('hero_pools', JSON.stringify(this.hero_pools), 60 * 60 * 1000);
+      },
+
+      imp_json(event){// JSONファイルからのImport(全データ)
+        const files = event.target.files ? event.target.files : event.dataTransfer.files;
+        const file = files[0];
+        const reader = new FileReader();
+        reader.onload = event => {
+            let parase = JSON.parse (event.target.result);
+            this.tiers = parase.tiers;
+            this.hero_pools = parase.hero_pools;
+        };
+        reader.readAsText(file)
+        
+      },
+
+      exp_json(){// JSONファイルからのExport(全データ)
+        const all = {tiers:this.tiers, hero_pools:this.hero_pools};
+        const blob = new Blob([JSON.stringify(all, null, '  ')], {type: 'application\/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        document.body.appendChild(a);
+        a.download = 'ExportHSBG_TierList.json';
+        a.href = url;
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+    }
+  });
+</script>
