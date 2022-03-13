@@ -43,7 +43,9 @@
       <table class="table table-dark">
         <tbody>
           <tr v-for="tier in tiers"style="min-height:120px">
-            <th scope="row" :style="tier.style">{{tier.name}}</th>
+            <th scope="row" :style="tier.style">
+              <input v-model="tier.name" @change="temp_save" style="border:solid 0px;background-color: transparent;">
+            </th>
             <td>
               <draggable tag="ul" @end="temp_save" :options="{group:'ITEMS'}"  style="min-height:100px" v-model="tier.heros">
                 <img @click="open_modal(hero)" v-for="hero in tier.heros" :key="hero.no" :src="get_imgfilepath(hero.no)" style="height:100px;"></img>
