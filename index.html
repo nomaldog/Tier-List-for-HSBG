@@ -22,7 +22,7 @@
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">{{get_selecthero.hero_name}}</h5>
+              <h5 class="modal-title">{{get_heroinfo_selected.hero_name}}</h5>
               <img :src="get_imgfilepath(modal_target.no)" style="height:200px;"></img>
             </div>
             <div class="modal-body">
@@ -52,18 +52,16 @@
               </draggable>
             </td>
             <td style="width: 3%;">
-              <button type="button" class="btn btn-secondary m-1" @click="delete_rows(index)">-</button>
+              <button type="button" class="btn btn-secondary m-1" @click="delete_rows(index)">－</button>
             </td>
           </tr>
         </tbody>
       </table>
 
-      <button type="button" class="btn m-1" style="background-color:#FA7E66" @click="add_rows('#FA7E66')">＋</button>
-      <button type="button" class="btn m-1" style="background-color:#FF7F3F" @click="add_rows('#FF7F3F')">＋</button>
-      <button type="button" class="btn m-1" style="background-color:#F6D860" @click="add_rows('#F6D860')">＋</button>
-      <button type="button" class="btn m-1" style="background-color:#95CD41" @click="add_rows('#95CD41')">＋</button>
-      <button type="button" class="btn m-1" style="background-color:#4DCDEB" @click="add_rows('#4DCDEB')">＋</button>
-      <button type="button" class="btn m-1" style="background-color:#C0C0C0" @click="add_rows('#C0C0C0')">＋</button>
+      <!-- 行追加ボタン -->
+      <button v-for="style in selectable_colors" v-bind:style="style"
+              type="button" class="btn m-1" 
+              @click="add_rows(style)">＋</button>
       
       <!-- Tier表外の未割り当てヒーロープール -->
       <draggable tag="ul" @end="temp_save" :options="{group:'ITEMS'}"  style="min-height:120px" v-model="hero_pools">
@@ -89,14 +87,31 @@
       hero_pools:[],   // Tier表外のヒーロープール中身
       hero_info:[],    // 静的なヒーロー情報
       import_fname:'', // JSON Importでinputに指定されたファイル名
-      modal_target:[]  // 各ヒーローの詳細画面で開いているヒーロー情報（参照渡ししてる）
+      modal_target:[], // 各ヒーローの詳細画面で開いているヒーロー情報（参照渡ししてる）
+      selectable_colors:[{"background-color":'#FA7E66', "width":"10%"}
+                        ,{"background-color":'#FF7F3F', "width":"10%"}
+                        ,{"background-color":'#F6D860', "width":"10%"}
+                        ,{"background-color":'#95CD41', "width":"10%"}
+                        ,{"background-color":'#4DCDEB', "width":"10%"}
+                        ,{"background-color":'#C0C0C0', "width":"10%"}] // Tier表で追加可能な色
     },
     mounted() {
-
       // 一時保存データの読み込み（データがない場合はデフォルト定義を読み込み）
       if(Vue.ls.get('tiers')){
         this.tiers      = JSON.parse(Vue.ls.get('tiers'));
+      }else{
+        // デフォルトデータ読み込み
+        fetch('./default.json')
+          .then(response => {
+              return response.json();
+          })
+          .then(json => {
+              if(this.tiers.length === 0){
+                this.tiers = json.tiers;
+              }
+          })
       }
+
       // 静的なヒーロー情報読み込み
       fetch('./database.json')
       .then(response => {
@@ -106,25 +121,14 @@
               this.hero_info = json.hero_info;
               this.complement_pools();
           })
-
-      // デフォルトデータ読み込み（新規ヒーローが居た場合ロード）
-      fetch('./default.json')
-        .then(response => {
-            return response.json();
-        })
-        .then(json => {
-            if(this.tiers.length === 0){
-              this.tiers = json.tiers;
-            }
-        })
     },
     computed:{
-      // 要見直し：各ヒーローの詳細画面でヒーロー名を出力する仕組み
-      get_selecthero(){
+      get_heroinfo_selected(){
         return this.modal_target.no ? this.hero_info.filter(hero_info => hero_info.no === this.modal_target.no)[0] : {hero_name:""};
       }
     },
     methods: {
+      // Tier表外のヒーローをヒーロープールに補完する（★コード見直しする）
       complement_pools(){
         this.hero_pools = [];
         this.hero_info.forEach(hero_base => {
@@ -139,16 +143,22 @@
           }
         },this);
       },
-      add_rows(color){
-        this.tiers.push({"heros": [],"name": "","style": "background-color:" + color + ";width:10%"});
+
+      // Tier表に行追加する（色は画面で指定）
+      add_rows(style){
+        this.tiers.push({"heros": [],"name": "","style": style});
         this.temp_save();
       },
+
+      // Tier表の行削除する（対象行は画面で指定）
       delete_rows(index){
         this.tiers.splice(index,1);
         this.temp_save();
         this.complement_pools();
       },
-      open_modal(hero){ // ヒーロー詳細画面を開く
+
+      // ヒーロー詳細画面を開く
+      open_modal(hero){
         let modal = document.getElementById('modal');
         let modalObj = new bootstrap.Modal(modal);
         this.modal_target = hero;
@@ -156,16 +166,19 @@
         modalObj.show();
       },
 
-      get_imgfilepath(no){ // ヒーロー画像のファイルパス取得
+      // ヒーロー画像のファイルパス取得
+      get_imgfilepath(no){
         return no ? this.hero_info.filter(hero_info => hero_info.no === no)[0].filename : '';
       },
 
-      temp_save(){// ローカルストレージへの一時保存　各項目変更するたびに実行
+      // ローカルストレージへの一時保存　各項目変更するたびに実行
+      temp_save(){
         Vue.ls.set('tiers'     , JSON.stringify(this.tiers)     , 60 * 60 * 1000);
         Vue.ls.set('hero_pools', JSON.stringify(this.hero_pools), 60 * 60 * 1000);
       },
 
-      imp_json(event){// JSONファイルからのImport(全データ)
+      // JSONファイルからのImport(全データ)
+      imp_json(event){
         const files = event.target.files ? event.target.files : event.dataTransfer.files;
         const file = files[0];
         const reader = new FileReader();
@@ -178,7 +191,8 @@
         reader.readAsText(file);
       },
 
-      exp_json(){// JSONファイルからのExport(全データ)
+      // JSONファイルからのExport(全データ)
+      exp_json(){
         const all = {tiers:this.tiers, hero_pools:this.hero_pools};
         const blob = new Blob([JSON.stringify(all, null, '  ')], {type: 'application\/json'});
         const url = URL.createObjectURL(blob);
