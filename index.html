@@ -42,7 +42,7 @@
       <!-- Tier表 -->
       <table class="table table-dark">
         <tbody>
-          <tr v-for="tier in tiers"style="min-height:120px">
+          <tr v-for="tier,index in tiers"style="min-height:120px">
             <th scope="row" :style="tier.style">
               <input v-model="tier.name" @change="temp_save" style="border:solid 0px;background-color: transparent;">
             </th>
@@ -51,10 +51,20 @@
                 <img @click="open_modal(hero)" v-for="hero in tier.heros" :key="hero.no" :src="get_imgfilepath(hero.no)" style="height:100px;"></img>
               </draggable>
             </td>
+            <td style="width: 3%;">
+              <button type="button" class="btn btn-secondary m-1" @click="delete_rows(index)">-</button>
+            </td>
           </tr>
         </tbody>
       </table>
 
+      <button type="button" class="btn m-1" style="background-color:#FA7E66" @click="add_rows('#FA7E66')">＋</button>
+      <button type="button" class="btn m-1" style="background-color:#FF7F3F" @click="add_rows('#FF7F3F')">＋</button>
+      <button type="button" class="btn m-1" style="background-color:#F6D860" @click="add_rows('#F6D860')">＋</button>
+      <button type="button" class="btn m-1" style="background-color:#95CD41" @click="add_rows('#95CD41')">＋</button>
+      <button type="button" class="btn m-1" style="background-color:#4DCDEB" @click="add_rows('#4DCDEB')">＋</button>
+      <button type="button" class="btn m-1" style="background-color:#C0C0C0" @click="add_rows('#C0C0C0')">＋</button>
+      
       <!-- Tier表外の未割り当てヒーロープール -->
       <draggable tag="ul" @end="temp_save" :options="{group:'ITEMS'}"  style="min-height:120px" v-model="hero_pools">
         <img v-for="hero in hero_pools" :key="hero.no" :src="get_imgfilepath(hero.no)" style="height:100px;"></img>
@@ -82,6 +92,11 @@
       modal_target:[]  // 各ヒーローの詳細画面で開いているヒーロー情報（参照渡ししてる）
     },
     mounted() {
+
+      // 一時保存データの読み込み（データがない場合はデフォルト定義を読み込み）
+      if(Vue.ls.get('tiers')){
+        this.tiers      = JSON.parse(Vue.ls.get('tiers'));
+      }
       // 静的なヒーロー情報読み込み
       fetch('./database.json')
       .then(response => {
@@ -89,22 +104,19 @@
           })
           .then(json => {
               this.hero_info = json.hero_info;
+              this.complement_pools();
           })
 
-      // 一時保存データの読み込み（データがない場合はデフォルト定義を読み込み）
-      if(Vue.ls.get('tiers') && Vue.ls.get('hero_pools')){
-        this.tiers      = JSON.parse(Vue.ls.get('tiers'));
-        this.hero_pools = JSON.parse(Vue.ls.get('hero_pools'));
-      }else{
-        fetch('./default.json')
-          .then(response => {
-              return response.json();
-          })
-          .then(json => {
+      // デフォルトデータ読み込み（新規ヒーローが居た場合ロード）
+      fetch('./default.json')
+        .then(response => {
+            return response.json();
+        })
+        .then(json => {
+            if(this.tiers.length === 0){
               this.tiers = json.tiers;
-              this.hero_pools = json.hero_pools;
-          })
-      }
+            }
+        })
     },
     computed:{
       // 要見直し：各ヒーローの詳細画面でヒーロー名を出力する仕組み
@@ -113,6 +125,29 @@
       }
     },
     methods: {
+      complement_pools(){
+        this.hero_pools = [];
+        this.hero_info.forEach(hero_base => {
+          let bool_saved;
+          this.tiers.forEach(hero_saved => {
+            if(hero_saved.heros.filter(hero => hero.no === hero_base.no).length !== 0){
+              bool_saved = true;
+            }
+          },this);
+          if(!bool_saved){
+            this.hero_pools.push({"no":hero_base.no, "memo":""});
+          }
+        },this);
+      },
+      add_rows(color){
+        this.tiers.push({"heros": [],"name": "","style": "background-color:" + color + ";width:10%"});
+        this.temp_save();
+      },
+      delete_rows(index){
+        this.tiers.splice(index,1);
+        this.temp_save();
+        this.complement_pools();
+      },
       open_modal(hero){ // ヒーロー詳細画面を開く
         let modal = document.getElementById('modal');
         let modalObj = new bootstrap.Modal(modal);
@@ -138,9 +173,9 @@
             let parase = JSON.parse (event.target.result);
             this.tiers = parase.tiers;
             this.hero_pools = parase.hero_pools;
+            this.complement_pools();
         };
-        reader.readAsText(file)
-        
+        reader.readAsText(file);
       },
 
       exp_json(){// JSONファイルからのExport(全データ)
