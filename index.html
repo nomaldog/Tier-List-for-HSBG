@@ -47,7 +47,7 @@
               <input v-model="tier.name" @change="temp_save" style="border:solid 0px;background-color: transparent;">
             </th>
             <td class="p-0">
-              <draggable tag="ul" @end="temp_save" :options="{group:'ITEMS'}"  style="min-height:100px" v-model="tier.heros" class="m-0">
+              <draggable tag="ul" @end="temp_save" :options="{group:'ITEMS'}"  style="min-height:100px;padding-left:0;" v-model="tier.heros" class="m-0">
                 <img @click="open_modal(hero)" v-for="hero in tier.heros" :key="hero.no" :src="get_imgfilepath(hero.no)" style="height:100px;"></img>
               </draggable>
             </td>
