@@ -173,8 +173,8 @@
 
       // ローカルストレージへの一時保存　各項目変更するたびに実行
       temp_save(){
-        Vue.ls.set('tiers'     , JSON.stringify(this.tiers)     , 60 * 60 * 1000);
-        Vue.ls.set('hero_pools', JSON.stringify(this.hero_pools), 60 * 60 * 1000);
+        Vue.ls.set('tiers'     , JSON.stringify(this.tiers));
+        Vue.ls.set('hero_pools', JSON.stringify(this.hero_pools));
       },
 
       // JSONファイルからのImport(全データ)
