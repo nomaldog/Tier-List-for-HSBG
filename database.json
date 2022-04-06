@@ -78,5 +78,6 @@
               ,{"no":77, "hero_name":"ヴァンダル・ストームパイク"     , "filename":"image/ヴァンダル・ストームパイク.png"}
               ,{"no":78, "hero_name":"ヴォルジン"                     , "filename":"image/ヴォルジン.png"}
               ,{"no":79, "hero_name":"フェイリン大使"                 , "filename":"image/フェイリン大使.png"}
+              ,{"no":80, "hero_name":"イニ・ストームコイル"           , "filename":"image/イニ・ストームコイル.png"}
              ]
 }
