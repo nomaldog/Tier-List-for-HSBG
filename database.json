@@ -79,7 +79,16 @@
               ,{"no":78, "hero_name":"ヴォルジン"                     , "filename":"image/ヴォルジン.png"}
               ,{"no":79, "hero_name":"フェイリン大使"                 , "filename":"image/フェイリン大使.png"}
               ,{"no":80, "hero_name":"イニ・ストームコイル"           , "filename":"image/イニ・ストームコイル.png"}
-              ,{"no":81, "hero_name":"アズジャラ女王"                 , "filename":"image/アズジャラ女王.png"}
+              ,{"no":81, "hero_name":"アズシャラ女王"                 , "filename":"image/アズシャラ女王.png"}
               ,{"no":82, "hero_name":"オズマット"                     , "filename":"image/オズマット.png"}
+              ,{"no":83, "hero_name":"エンハンス・オ・メカーノ"       , "filename":"image/エンハンス・オ・メカーノ.png"}
+              ,{"no":84, "hero_name":"シルヴァナス・ウィンドランナー" , "filename":"image/シルヴァナス・ウィンドランナー.png"}
+              ,{"no":85, "hero_name":"テロン・ゴアフィーンド"         , "filename":"image/テロン・ゴアフィーンド.png"}
+              ,{"no":86, "hero_name":"バンドマネージャーE.T.C."       , "filename":"image/バンドマネージャーE.T.C..png"}
+              ,{"no":87, "hero_name":"ピュートリサイド教授"           , "filename":"image/ピュートリサイド教授.png"}
+              ,{"no":88, "hero_name":"マーロック・ホームズ"           , "filename":"image/マーロック・ホームズ.png"}
+              ,{"no":89, "hero_name":"レディ・ヴァッシュ"             , "filename":"image/レディ・ヴァッシュ.png"}
+              ,{"no":90, "hero_name":"強盗王トグワグル"               , "filename":"image/強盗王トグワグル.png"}
+              ,{"no":91, "hero_name":"獄吏王"                         , "filename":"image/獄吏王.png"}
              ]
 }
